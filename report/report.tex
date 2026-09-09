@@ -1,0 +1,419 @@
+\documentclass[12pt, a4paper]{article}
+
+% ---------- Packages ----------
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage{listings}
+\usepackage{needspace}
+\usepackage{times}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+\setlength{\headheight}{15pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{Student Performance Prediction}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    columns=fullflexible
+}
+
+\title{}
+\date{}
+
+\begin{document}
+
+% ================= TITLE PAGE =================
+\begin{titlepage}
+    \centering
+
+    \vspace*{\fill}
+
+    {\huge\bfseries\underline{STUDENT PERFORMANCE}}\\[0.35cm]
+    {\huge\bfseries\underline{PREDICTION}}
+
+    \vspace{2.5cm}
+
+    {\large\bfseries Prepared by:}\\[0.4cm]
+    {\large\bfseries Tanvir Kaur}\\[0.15cm]
+    {\large (102303389)}
+
+    \vspace*{\fill}
+
+    \includegraphics[width=3.5cm]{ti.logo.png}\\[0.6cm]
+    {\large\bfseries Thapar Institute of Engineering and Technology}\\[0.2cm]
+    {\large\bfseries Patiala}
+
+    \vspace{1.8cm}
+
+    {\small\href{https://github.com/tanvirkaur30/student-performance-prediction}{github.com/tanvirkaur30/student-performance-prediction}}
+
+    \vspace*{\fill}
+
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ================= ABSTRACT =================
+\section*{Abstract}
+Academic achievement is a cornerstone of a student's educational journey, influencing future
+career opportunities and personal growth. Predicting student performance enables educational
+institutions to identify and support students who may be at risk of underperforming. This
+report presents a comprehensive machine learning pipeline — Logistic Regression, Decision
+Tree, Random Forest, k-Nearest Neighbors, and XGBoost — applied to the UCI Student Performance
+dataset. Beyond the baseline comparison, this iteration of the project adds engineered
+features, stratified cross-validation, hyperparameter tuning, SHAP-based explainability, and
+an ablation study that quantifies how much predictive power comes specifically from prior
+academic grades versus demographic and behavioral factors. A tuned \textbf{XGBoost} model
+achieved the best cross-validated performance (macro F1 $\approx 0.90$), and the full pipeline
+is packaged as a reusable, deployable project with an interactive Streamlit demo.
+
+\section{Introduction}
+Student performance is a primary indicator of educational effectiveness and is critical for
+forecasting future academic and professional success. Educational institutions increasingly
+rely on data-driven approaches to identify students requiring intervention. Predictive
+analytics powered by machine learning offers a robust framework to classify students by risk
+level and design targeted support strategies.
+
+Academic institutions often face challenges in predicting student success due to the
+multifaceted nature of educational performance, influenced by cognitive, behavioral, social,
+and psychological factors. Traditional analytical methods often fall short in capturing these
+complexities. Machine learning, by contrast, offers a more sophisticated approach by detecting
+hidden patterns and making data-driven predictions. This project explores the feasibility of
+predicting student performance through machine learning methods, and — going beyond the
+original coursework scope — investigates \emph{which} predictions are actually useful in
+practice by separating the contribution of prior grades from other, earlier-available signals.
+
+\subsection*{Scope of the Report}
+This report investigates the application of supervised machine learning algorithms to predict
+student performance using a dataset comprising demographic, academic, and behavioral
+attributes. The goal is to provide actionable insights for educators, administrators, and
+policymakers, enabling data-informed strategies to support student achievement, and to
+demonstrate an end-to-end, production-style ML workflow (versioned pipeline, tuned models,
+explainability, and a deployable interface).
+
+\subsection*{Problem Statement}
+Academic performance significantly affects students' life trajectories. However, predicting
+performance is challenging due to the multitude of influencing factors such as demographics,
+socio-economic background, behavioral habits, and psychological parameters. The core problem
+addressed in this project is: \emph{``Can we predict students' academic performance accurately
+based on available demographic, academic, and behavioral attributes — and how much of that
+accuracy depends on already knowing their prior grades?''}
+
+\subsection*{Objectives}
+\begin{itemize}[noitemsep]
+    \item Predict students' academic performance category (Low / Medium / High) from available attributes.
+    \item Identify key determinants impacting academic success, with quantified feature importance.
+    \item Evaluate and compare multiple ML models using robust cross-validation, not a single split.
+    \item Tune the strongest candidates and quantify the gain from hyperparameter optimization.
+    \item Separate the predictive contribution of prior grades from behavioral/demographic factors (ablation study).
+    \item Provide actionable, explainable insights for educators via SHAP analysis.
+    \item Package the work as a reusable, deployable, GitHub-ready project.
+\end{itemize}
+
+\section{Literature Review}
+Recent years have seen a surge in research focused on predicting student performance using
+machine learning and data mining techniques. Studies have explored a variety of algorithms,
+including Decision Trees, Random Forests, Support Vector Machines, Naive Bayes, and Neural
+Networks, each with varying degrees of success.
+
+\textbf{Key findings from the literature:}
+\begin{itemize}[noitemsep]
+    \item \textbf{Feature Selection:} Prior academic performance, attendance, participation,
+    and parental background are consistently identified as strong predictors.
+    \item \textbf{Model Performance:} Ensemble methods like Random Forest and boosting
+    algorithms often outperform single classifiers due to their ability to handle complex,
+    non-linear relationships.
+    \item \textbf{Explainability:} Recent work emphasizes model transparency, using techniques
+    such as SHAP values to interpret feature importance and build stakeholder trust. This
+    report directly applies SHAP to the final model (Section~\ref{sec:shap}).
+    \item \textbf{Personalized Interventions:} Predictive models are increasingly used to
+    design targeted interventions, such as personalized study recommendations and early
+    warning systems.
+\end{itemize}
+Despite these advances, challenges remain in data quality, ethical considerations, and
+generalizability across diverse educational contexts — points revisited in
+Section~\ref{sec:limitations}.
+
+\section{Methodology}
+
+\subsection{Data Collection}
+The project uses the UCI Student Performance Dataset (Mathematics course), comprising 395
+students' demographic information, academic records, and lifestyle habits, collected from two
+secondary schools in Portugal (Cortez \& Silva, 2008).
+
+\textbf{Attributes included:}
+\begin{itemize}[noitemsep]
+    \item \textbf{Demographic:} age, sex, address, family size, parental education, job types.
+    \item \textbf{Academic:} grades (G1, G2, G3), study time, failures, school support.
+    \item \textbf{Behavioral:} absences, extracurricular activities, free time, alcohol consumption, health status.
+\end{itemize}
+
+\subsection{Feature Engineering}
+Beyond the raw UCI columns, three engineered features were added to give models (and this
+analysis) more structured signal:
+\begin{itemize}[noitemsep]
+    \item \texttt{avg\_alcohol} — mean of workday (\texttt{Dalc}) and weekend (\texttt{Walc}) alcohol consumption.
+    \item \texttt{parent\_edu\_avg} — mean of mother's and father's education level.
+    \item \texttt{avg\_prior\_grade} — mean of \texttt{G1} and \texttt{G2}, capturing overall prior trend.
+\end{itemize}
+
+\subsection{Data Preprocessing}
+\begin{itemize}[noitemsep]
+    \item \textbf{Missing values:} none present in the original dataset.
+    \item \textbf{Encoding:} implemented via a single \texttt{scikit-learn} \texttt{ColumnTransformer}
+    inside a \texttt{Pipeline} — one-hot encoding for binary and nominal categorical columns,
+    standard scaling for numeric columns. This replaces ad-hoc \texttt{LabelEncoder} usage from
+    the original version, which risked implying false ordinal relationships between nominal
+    categories (e.g. parental job types) and could leak scaling statistics across CV folds.
+    \item \textbf{Target construction:} \texttt{G3} (0--20) is bucketed into \emph{Low (0--9)},
+    \emph{Medium (10--14)}, and \emph{High (15--20)}.
+    \item \textbf{Splitting:} stratified 80/20 train-test split, with all model comparison done
+    via stratified 5-fold cross-validation on the training set.
+\end{itemize}
+
+\subsection{Exploratory Data Analysis}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{grade_distribution.png}
+    \caption{Distribution of final grades (G3) across all 395 students.}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{class_balance.png}
+    \caption{Class balance after bucketing G3 into Low / Medium / High. The dataset is
+    moderately imbalanced (Low: 130, Medium: 192, High: 73), which is why macro-averaged
+    F1-score — not raw accuracy — is used as the primary tuning and comparison metric.}
+\end{figure}
+
+Key EDA findings: strong positive correlation between \texttt{G1}, \texttt{G2}, and
+\texttt{G3}; a negative relationship between absences and final grade; higher weekend alcohol
+consumption associated with lower grades; and higher study time associated with better
+outcomes.
+
+\section{Model Building}
+
+\subsection{Pipeline Design}
+All five candidate models are wrapped in an identical \texttt{Pipeline(preprocessor, classifier)}
+so that encoding and scaling are fit \emph{only} on training folds during cross-validation —
+eliminating the data leakage risk present when preprocessing is done once on the full dataset
+before splitting.
+
+\subsection{Baseline Comparison (5-fold Stratified Cross-Validation)}
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Model} & \textbf{CV Accuracy} & \textbf{CV Macro F1} \\
+\midrule
+Logistic Regression & 0.836 $\pm$ 0.019 & 0.834 $\pm$ 0.020 \\
+Decision Tree        & 0.842 $\pm$ 0.022 & 0.844 $\pm$ 0.025 \\
+Random Forest         & 0.867 $\pm$ 0.045 & 0.869 $\pm$ 0.042 \\
+k-Nearest Neighbors   & 0.706 $\pm$ 0.050 & 0.696 $\pm$ 0.056 \\
+\textbf{XGBoost}      & \textbf{0.886 $\pm$ 0.043} & \textbf{0.892 $\pm$ 0.038} \\
+\bottomrule
+\end{tabular}
+\caption{Baseline 5-fold stratified CV results (untuned models, training set only).}
+\end{table}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{model_comparison.png}
+    \caption{Cross-validated macro F1-score comparison across all baseline models.}
+\end{figure}
+
+XGBoost and Random Forest are the clear front-runners, confirming the literature's consistent
+finding that ensemble/boosting methods outperform single classifiers on this type of
+structured, moderately-sized tabular data.
+
+\subsection{Hyperparameter Tuning}
+The two strongest candidates were tuned using \texttt{GridSearchCV} (5-fold CV, scored on
+macro F1):
+
+\begin{itemize}[noitemsep]
+    \item \textbf{Random Forest} — grid over \texttt{n\_estimators} $\in \{100,200,400\}$,
+    \texttt{max\_depth} $\in \{\text{None},6,10,16\}$, \texttt{min\_samples\_split} $\in
+    \{2,4,8\}$, \texttt{min\_samples\_leaf} $\in \{1,2,4\}$. Best: \texttt{n\_estimators=100},
+    \texttt{max\_depth=None}, \texttt{min\_samples\_split=4}, \texttt{min\_samples\_leaf=1}
+    $\to$ CV Macro F1 $= 0.891$.
+    \item \textbf{XGBoost} — grid over \texttt{n\_estimators} $\in \{100,200,300\}$,
+    \texttt{max\_depth} $\in \{3,4,6\}$, \texttt{learning\_rate} $\in \{0.05,0.1,0.2\}$. Best:
+    \texttt{n\_estimators=300}, \texttt{max\_depth=4}, \texttt{learning\_rate=0.1} $\to$ CV
+    Macro F1 $= 0.899$.
+\end{itemize}
+
+Tuned \textbf{XGBoost} was selected as the final model.
+
+\section{Model Evaluation}
+
+\subsection{Held-out Test Set Performance}
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-score} \\
+\midrule
+High   & 0.94 & 1.00 & 0.97 \\
+Low    & 0.81 & 0.85 & 0.83 \\
+Medium & 0.89 & 0.84 & 0.86 \\
+\midrule
+\textbf{Accuracy}   & \multicolumn{3}{c}{0.873} \\
+\textbf{Macro avg}  & 0.88 & 0.90 & 0.89 \\
+\textbf{Weighted avg} & 0.87 & 0.87 & 0.87 \\
+\bottomrule
+\end{tabular}
+\caption{Classification report — tuned XGBoost on the held-out 20\% test set (79 students).}
+\end{table}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{confusion_matrix_best_model.png}
+    \caption{Confusion matrix — tuned XGBoost, held-out test set. All 15 ``High'' students
+    were correctly identified; most confusion occurs between the adjacent Low/Medium classes,
+    which is expected given they are artificial buckets of a continuous grade.}
+\end{figure}
+\Needspace{8\baselineskip}
+\subsection{Ablation Study: Predicting Without Prior Grades}
+G1 and G2 dominate feature importance in essentially every student-performance study,
+including this one — but that also makes the prediction less actionable: if a student's
+period grades are already known, a model isn't required to notice they're struggling. The more
+useful question is whether performance can be flagged \emph{before} G1/G2 exist, using only
+demographic and behavioral data.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Feature set} & \textbf{Test Accuracy} & \textbf{Test Macro F1} \\
+\midrule
+With G1/G2 (full model)      & 0.899 & 0.915 \\
+\textbf{Without G1/G2 (ablation)} & 0.557 & 0.473 \\
+\bottomrule
+\end{tabular}
+\caption{Ablation study — Random Forest trained with vs.\ without prior-grade features.}
+\end{table}
+
+As expected, performance drops substantially when G1/G2 are
+removed: test accuracy falls from 89.9\% to 55.7\%, a drop of
+approximately 34 percentage points. However, the model still
+performs above the majority-class baseline ($\approx 49\%$) using
+only demographic, behavioral, and lifestyle features. This supports a two-stage early-warning design: a lighter model for
+\emph{early-semester} risk flagging before grades exist, and the full model for
+\emph{mid-year} intervention targeting once G1/G2 are available.
+
+\section{Feature Importance and Explainability}
+\label{sec:shap}
+To move beyond raw feature-importance scores (which can be misleading for correlated or
+one-hot-encoded features), SHAP (SHapley Additive exPlanations) values were computed for the
+final XGBoost model.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{shap_summary.png}
+    \caption{SHAP summary plot — top 15 features by mean absolute SHAP value (averaged across
+    the three output classes). Point color indicates the feature's value (red = high, blue =
+    low) and horizontal position shows its impact on the model's output.}
+\end{figure}
+
+\textbf{Reading the plot:} \texttt{G2} and the engineered \texttt{avg\_prior\_grade} dominate,
+confirming the correlation analysis. Beyond grades, weekend alcohol consumption
+(\texttt{Walc}), absences, and age carry meaningful secondary signal — consistent with the
+discussion in Section~\ref{sec:discussion} and the wider literature on behavioral predictors
+of academic outcomes.
+
+\section{Results Summary}
+\begin{itemize}[noitemsep]
+    \item \textbf{Best model:} Tuned XGBoost — CV Macro F1 $= 0.899$, Test Accuracy $= 87.3\%$, Test Macro F1 $= 0.888$.
+    \item \textbf{Key predictors:} G2, avg\_prior\_grade, G1, absences, weekend alcohol use (Walc), age.
+    \item \textbf{Ablation finding:} removing prior grades reduces
+Random Forest test accuracy from 89.9\% to 55.7\%, a drop of
+approximately 34 percentage points, demonstrating the strong
+predictive contribution of prior academic performance.
+    \item \textbf{Hyperparameter tuning gain:} CV Macro F1 improved from 0.892 (default XGBoost) to 0.899 (tuned) — a modest but consistent gain, showing the defaults were already reasonably close to optimal for this dataset size.
+\end{itemize}
+
+\section{Discussion}
+\label{sec:discussion}
+\begin{itemize}[noitemsep]
+    \item \textbf{Academic history dominates:} Previous grades (G1, G2) are the strongest
+    predictors, aligning with educational theory that past performance is a reliable indicator
+    of future success.
+    \item \textbf{Behavioral factors matter, but secondarily:} absences and alcohol use are
+    significant contributors, but the ablation study shows they cannot substitute for the
+    signal carried by prior grades.
+    \item \textbf{Ensemble/boosting methods win:} XGBoost and Random Forest both outperform
+    Logistic Regression, Decision Tree, and k-NN — confirming their suitability for this kind
+    of structured, mixed categorical/numeric tabular data.
+    \item \textbf{Practical implication:} a two-tier early-warning system is plausible — a
+    lightweight model using only demographic/behavioral data early in the term, upgraded to
+    the full model once period grades become available.
+\end{itemize}
+
+\section{Deployment}
+To make this project usable beyond a notebook, the trained pipeline is wrapped in:
+\begin{itemize}[noitemsep]
+    \item \textbf{\texttt{src/predict.py}} — a reusable inference function and CLI for single-student predictions.
+    \item \textbf{\texttt{app.py}} — an interactive Streamlit web app where a user adjusts sliders/dropdowns for a hypothetical student and receives a live Low/Medium/High prediction with class probabilities.
+\end{itemize}
+The full source, trained model, notebook, and this report are published at:
+\url{https://github.com/tanvirkaur30/student-performance-prediction}
+
+\section{Limitations}
+\label{sec:limitations}
+\begin{itemize}[noitemsep]
+    \item The dataset is limited to 395 students from two schools in Portugal, which may limit generalizability to other educational systems.
+    \item Psychological and socio-emotional factors were not captured in the original data and could further improve prediction accuracy.
+    \item The Low/Medium/High bucketing is a modeling choice; a regression formulation of G3 was not explored here but is a natural extension.
+    \item Ethical considerations — data privacy, and the risk of a predictive label influencing how a student is treated by staff — must be addressed before any real-world deployment.
+\end{itemize}
+
+\section{Conclusion}
+Predicting student performance using machine learning is highly feasible: a tuned XGBoost
+model reached 87.3\% test accuracy and 0.888 macro F1 on a held-out set. Prior academic
+grades remain the dominant predictor, but the ablation study shows meaningful signal persists
+in purely demographic and behavioral data, supporting early-intervention use cases. SHAP
+analysis confirms the model's reasoning aligns with domain intuition (grades, attendance, and
+lifestyle factors), which is important for building institutional trust in such a system.
+
+Future work could explore regression on the raw G3 score, incorporate mental-health or
+online-learning-behavior indicators, and validate the approach across additional schools or
+countries before any operational deployment.
+
+\section*{References}
+\begin{itemize}[noitemsep]
+    \item Cortez, P., \& Silva, A. (2008). \emph{Using Data Mining to Predict Secondary School Student Performance}. University of Minho, Portugal.
+    \item UCI Machine Learning Repository. \emph{Student Performance Data Set}. \url{https://archive.ics.uci.edu/ml/datasets/Student+Performance}
+    \item James, G., Witten, D., Hastie, T., \& Tibshirani, R. (2013). \emph{An Introduction to Statistical Learning}. Springer.
+    \item Pedregosa, F. et al. (2011). Scikit-learn: Machine Learning in Python. \emph{Journal of Machine Learning Research}, 12, 2825--2830.
+    \item Chen, T., \& Guestrin, C. (2016). XGBoost: A Scalable Tree Boosting System. \emph{Proceedings of the 22nd ACM SIGKDD}.
+    \item Lundberg, S. M., \& Lee, S.-I. (2017). A Unified Approach to Interpreting Model Predictions. \emph{Advances in Neural Information Processing Systems}.
+    \item Han, J., Kamber, M., \& Pei, J. (2011). \emph{Data Mining: Concepts and Techniques}. Elsevier.
+    \item Kuhn, M., \& Johnson, K. (2013). \emph{Applied Predictive Modeling}. Springer.
+\end{itemize}
+
+\end{document}

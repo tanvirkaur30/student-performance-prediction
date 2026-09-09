@@ -1,0 +1,101 @@
+{
+  "baseline_cv_comparison": [
+    {
+      "model": "Logistic Regression",
+      "cv_accuracy_mean": 0.8355,
+      "cv_accuracy_std": 0.0188,
+      "cv_f1_macro_mean": 0.8335,
+      "cv_f1_macro_std": 0.0196
+    },
+    {
+      "model": "Decision Tree",
+      "cv_accuracy_mean": 0.8418,
+      "cv_accuracy_std": 0.0221,
+      "cv_f1_macro_mean": 0.8441,
+      "cv_f1_macro_std": 0.0253
+    },
+    {
+      "model": "Random Forest",
+      "cv_accuracy_mean": 0.867,
+      "cv_accuracy_std": 0.0446,
+      "cv_f1_macro_mean": 0.8686,
+      "cv_f1_macro_std": 0.042
+    },
+    {
+      "model": "k-NN",
+      "cv_accuracy_mean": 0.7057,
+      "cv_accuracy_std": 0.05,
+      "cv_f1_macro_mean": 0.6956,
+      "cv_f1_macro_std": 0.0555
+    },
+    {
+      "model": "XGBoost",
+      "cv_accuracy_mean": 0.8861,
+      "cv_accuracy_std": 0.0431,
+      "cv_f1_macro_mean": 0.8915,
+      "cv_f1_macro_std": 0.038
+    }
+  ],
+  "best_model": "XGBoost (tuned)",
+  "best_model_cv_f1_macro": 0.8991,
+  "test_accuracy": 0.8734,
+  "test_f1_macro": 0.8876,
+  "rf_best_params": {
+    "clf__max_depth": null,
+    "clf__min_samples_leaf": 1,
+    "clf__min_samples_split": 4,
+    "clf__n_estimators": 100
+  },
+  "xgb_best_params": {
+    "clf__learning_rate": 0.1,
+    "clf__max_depth": 4,
+    "clf__n_estimators": 300
+  },
+  "ablation_no_prior_grades": {
+    "test_accuracy": 0.557,
+    "test_f1_macro": 0.4726
+  },
+  "classification_report": "              precision    recall  f1-score   support\n\n        High       0.94      1.00      0.97        15\n         Low       0.81      0.85      0.83        26\n      Medium       0.89      0.84      0.86        38\n\n    accuracy                           0.87        79\n   macro avg       0.88      0.90      0.89        79\nweighted avg       0.87      0.87      0.87        79\n",
+  "class_names": [
+    "High",
+    "Low",
+    "Medium"
+  ],
+  "feature_columns": [
+    "school",
+    "sex",
+    "address",
+    "famsize",
+    "Pstatus",
+    "schoolsup",
+    "famsup",
+    "paid",
+    "activities",
+    "nursery",
+    "higher",
+    "internet",
+    "romantic",
+    "Mjob",
+    "Fjob",
+    "reason",
+    "guardian",
+    "age",
+    "Medu",
+    "Fedu",
+    "traveltime",
+    "studytime",
+    "failures",
+    "famrel",
+    "freetime",
+    "goout",
+    "Dalc",
+    "Walc",
+    "health",
+    "absences",
+    "G1",
+    "G2",
+    "avg_alcohol",
+    "parent_edu_avg",
+    "avg_prior_grade"
+  ]
+}
