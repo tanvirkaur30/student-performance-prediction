@@ -65,10 +65,13 @@ Removing prior grades drops accuracy by ~34 points — expected, but the model s
 `G2` and the engineered `avg_prior_grade` dominate, followed by weekend alcohol use (`Walc`),
 absences, and age — consistent with the correlation analysis and prior literature on
 behavioral predictors of academic performance.
-
 ## 🚀 Demo
 
-Run the interactive Streamlit app locally:
+### 🌐 Live Demo
+
+[**Open Student Performance Predictor →**](https://student-performance-prediction-jphh3skqbkgaw5ryjvm92b.streamlit.app/)
+
+### 💻 Run Locally
 
 ```bash
 streamlit run app.py
